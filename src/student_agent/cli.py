@@ -12,7 +12,7 @@ from .contracts import Contracts
 from .mcp_gateway import connect_gateway
 from .submission import package_submission, validate_artifacts
 from .trace import TraceWriter
-from .workflow import solve_case
+from .workflow import CARD_TOOLS, solve_case
 
 
 def _root(value: str) -> Path:
@@ -44,6 +44,9 @@ async def _run(root: Path) -> None:
         discovered_tools = await gateway.list_tools()
         if not discovered_tools:
             raise RuntimeError("MCP Gateway returned no tools")
+        undiscovered = CARD_TOOLS - set(discovered_tools)
+        if undiscovered:
+            raise RuntimeError(f"Agent Cards grant tools the gateway lacks: {sorted(undiscovered)}")
         for case_id in case_set.case_ids:
             case = case_set.cases[case_id]
             trace.emit(case_id=case_id, event_type="case_received", actor="coordinator")
